@@ -1,0 +1,36 @@
+.code
+{
+    font-family: inherit;
+    font-size:1.2em;
+    width:100%;
+    max-width: 100%;
+    height:100%;
+    border: 0;
+    border-radius: 0;
+    outline:0;
+    padding-left:1em;
+    background-color: var(--menu);
+}
+
+.compile-out
+{
+    padding:0;
+}
+
+.decode
+{
+    font-family: inherit;
+    font-size:1.2em;
+    width:100%;
+    max-width: 100%;
+    height:100%;
+    border: 0;
+    border-radius: 0;
+    padding-left:1em;
+    background-color: var(--menu);
+}
+
+.scrollable
+{
+    overflow: scroll;
+}

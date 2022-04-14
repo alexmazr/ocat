@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>&#x200B;</title>
+        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/window.css">
+        <link rel="stylesheet" href="css/flex.css">
+        <link rel="stylesheet" href="css/size.css">
+        <link rel="stylesheet" href="css/buttons.css">
+        <script type="text/javascript" src="/eel.js"></script> 
+    </head>
+    <body>
+        <div class="flex-column h-100">
+            <div class="flex-row">
+                <button class="tab" onclick="compile()" id="left-button"><p>Compile</p></button>
+                <button class="tab" onclick="swapWindow ('decode')"><p>Decode</p></button>
+                <button class="tab" onclick="swapWindow ('simulate')"><p>Simulate</p></button>
+            </div>
+            <div class="h-70" id="content">
+                <div class="scrollable code" contenteditable="true" id="code"></div>
+                <div class="scrollable compile-out" id="compile-out"></div>
+            </div>
+        </div>
+        <script type="text/javascript" src="/js/swap.js"></script>
+        <script type="text/javascript" src="/js/editor.js"></script>
+    </body>
+</html>
