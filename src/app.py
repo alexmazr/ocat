@@ -1,12 +1,12 @@
 import eel
-from parser import parse
+from cmd.compiler import compile
 
 eel.init('gui')
 
 @eel.expose
-def compile (text):
+def handleCompile (text):
     try:
-        return str (parse (text))
+        return str (compile (text))
     except Exception as e:
         return str (e)
 
@@ -14,4 +14,4 @@ def compile (text):
 def color ():
     pass
 
-eel.start('index.html', port=0)
+eel.start('index.html', port=0, cmdline_args=['--chrome-frame  --kiosk'])

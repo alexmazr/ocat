@@ -36,8 +36,13 @@ class Number:
     def __repr__ (self):
         return f"{type(self).__name__}({self.value})"
 
+class Type:
+    def __init__ (self, type):
+        self.type = type
+    def __repr__ (self):
+        return f"{type(self).__name__}({self.type})"
+
 class BinOp:
-    op = ""
     def __init__ (self, left, right):
         self.left = left
         self.right = right
@@ -57,3 +62,29 @@ class Mult (BinOp):
 class Div (BinOp):
     pass
 
+class UnaryOp:
+    def __init__ (self, node):
+        self.node = node
+    
+    def __repr__ (self):
+        return f"{type(self).__name__}({self.node})"
+
+class UnarySub (UnaryOp):
+    pass
+
+class BitwiseNot (UnaryOp):
+    pass
+
+class Callable:
+    def __init__ (self, name, args):
+        self.name = name
+        self.args = args
+
+    def __repr__ (self):
+        return  f"{type(self).__name__}({self.name}, {self.args})"
+
+class Function (Callable):
+    pass
+
+class Procedure (Callable):
+    pass

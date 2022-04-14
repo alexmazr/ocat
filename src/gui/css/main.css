@@ -26,7 +26,10 @@ body
     height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
-    background-color: var(--background);
+    background-color: var(--menu);
+    position:fixed;
+    top:0;
+    bottom: 0;
 }
 
 div
@@ -38,6 +41,7 @@ div
 p
 {
     margin:0;
+    font-size:1.2em;
 }
 
 ::-webkit-scrollbar 
@@ -63,4 +67,14 @@ p
 
 ::-webkit-scrollbar-corner {
     background-color: var(--menu);
+}
+
+.scrollable
+{
+    overflow: scroll;
+}
+
+.nav
+{
+    background-color: var(--background);
 }

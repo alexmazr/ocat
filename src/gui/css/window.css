@@ -2,19 +2,32 @@
 {
     font-family: inherit;
     font-size:1.2em;
-    width:100%;
+    width:auto;
     max-width: 100%;
     height:100%;
     border: 0;
     border-radius: 0;
     outline:0;
-    padding-left:1em;
     background-color: var(--menu);
+    margin-right:1.5em;
+    margin-left:1.5em;
 }
 
 .compile-out
 {
     padding:0;
+    height:30%;
+    max-height:30%;
+    background-color: var(--background);
+}
+
+.compile-out::-webkit-scrollbar-track 
+{
+    background-color: var(--background);
+}
+
+.compile-out::-webkit-scrollbar-corner {
+    background-color: var(--background);
 }
 
 .decode
@@ -29,8 +42,10 @@
     padding-left:1em;
     background-color: var(--menu);
 }
-
-.scrollable
+.lineno
 {
-    overflow: scroll;
+    position: absolute;
+    text-align: center;
+    width:1.5em;
+    color: var(--secondary);
 }
