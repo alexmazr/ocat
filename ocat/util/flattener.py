@@ -29,6 +29,7 @@ class Flattener:
             case Program ():
                 for stmt in node.statements:
                     self.instructions.append (self.flatten (stmt))
+                self.instructions = [instr for instr in self.instructions if instr is not None]
                 return self.instructions
             case EndProgram ():
                 return node
@@ -57,6 +58,7 @@ class Flattener:
                 return node
             case IfExpr ():
                 node.condition = self.checkFlat (self.flatten (node.condition))
+
                 condPc = len (self.instructions)
                 self.instructions.append (Jump (None))
 
@@ -74,6 +76,11 @@ class Flattener:
                 return node
             case If ():
                 node.condition = self.checkFlat (self.flatten (node.condition))
+                if isinstance (node.condition, Const):
+                    toFlatten = node.then if node.condition.value else node.else_
+                    for stmt in toFlatten:
+                        self.instructions.append (self.flatten (stmt))
+                    return
                 condPc = len (self.instructions)
                 self.instructions.append (Jump (None))
 
@@ -131,5 +138,4 @@ class Flattener:
                     self.env.dump ()
                     raise SystemExit ()
                 return node
-
 

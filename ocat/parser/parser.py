@@ -151,7 +151,7 @@ def p_statement (p):
 
 def p_return (p):
     'return : RETURN'
-    p[0] = EndProgram (None, LineData (p.lineno (1), p.lexpos (1)))
+    p[0] = EndProgram (tuple (), LineData (p.lineno (1), p.lexpos (1)))
 
 def p_return_args (p):
     'return : RETURN LPAREN arguments RPAREN'
@@ -206,7 +206,7 @@ def p_for (p):
 
 def p_if (p):
     'if : IF expression THEN statements END IF NEWLINE'
-    p[0] = If (p[2], p[4], None, LineData (p.lineno (1), p.lexpos (1)))
+    p[0] = If (p[2], p[4], tuple (), LineData (p.lineno (1), p.lexpos (1)))
 
 def p_if_else (p):
     'if : IF expression THEN statements ELSE statements END IF NEWLINE'
@@ -369,7 +369,7 @@ def p_expr_sci (p):
 
 def p_expr_bool (p):
     'expression : BOOL'
-    p[0] = Const (p[1], 'bool', LineData (p.lineno (1), p.lexpos (1)))
+    p[0] = Const (True if p[1] == 'true' else False, 'bool', LineData (p.lineno (1), p.lexpos (1)))
 
 def p_expr_uint (p):
     'expression : UINT'

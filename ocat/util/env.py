@@ -36,5 +36,4 @@ class Environment:
     def dump (self):
         global env
         for name, data in env.items ():
-            if data.type != 'temp':
-                print (f"\t{name} {data}")
+            print (f"\t{name} {data}")
