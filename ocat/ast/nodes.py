@@ -7,90 +7,149 @@ class Program:
 
     def __repr__ (self):
         return  f"{type(self).__name__}({self.id}, {self.statements})"
-       
+
+class EndProgram:
+    def __init__ (self, args, linedata):
+        self.args = args
+        self.linedata = linedata
+
+    def __repr__ (self):
+        return  f"{type(self).__name__}({self.args})"
+
+class LineData:
+    def __init__ (self, lineno, linepos):
+        self.lineno = lineno
+        self.linepos = linepos
+
 class Declare:
-    def __init__ (self, mutable, type, name, expr, token):
+    isFlat = False
+
+    def __init__ (self, mutable, type, name, expr, linedata):
         self.mutable = mutable
         self.type = type
         self.name = name
         self.expr = expr
-        self.token = token
+        self.linedata = linedata
     
     def __repr__ (self):
         return f"{type(self).__name__}({self.mutable}, {self.type}, {self.name}, {self.expr})"
 
 class Assign:
-    def __init__ (self, target, expr, token):
+    isFlat = False
+
+    def __init__ (self, target, expr, linedata):
         self.target = target
         self.expr = expr
-        self.token = token
+        self.linedata = linedata
 
     def __repr__ (self):
         return f"{type(self).__name__}({self.target}, {self.expr})"
 
-class Function:
-    def __init__ (self, name, args, token):
+class Call:
+    isFlat = False
+
+    def __init__ (self, name, args, linedata):
         self.name = name
         self.args = args
-        self.token = token
+        self.linedata = linedata
 
     def __repr__ (self):
         return f"{type(self).__name__}({self.name}, {self.args})"
 
+class Wait:
+    isFlat = True
+
+    def __init__ (self, type, time, linedata):
+        self.type = type
+        self.time = time
+        self.linedata = linedata
+
+    def __repr__ (self):
+        return f"{type(self).__name__}({self.type}, {self.time})"
+
 class If:
-    def __init__ (self, condition, then, else_, token):
+    isFlat = False
+
+    def __init__ (self, condition, then, else_, linedata):
         self.condition = condition
         self.then = then
         self.else_ = else_
-        self.token = token
+        self.linedata = linedata
 
     def __repr__ (self):
         return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
 
 class IfExpr:
-    def __init__ (self, condition, then, else_, token):
+    isFlat = False
+
+    def __init__ (self, condition, then, else_, linedata):
         self.condition = condition
         self.then = then
         self.else_ = else_
-        self.token = token
+        self.linedata = linedata
     
     def __repr__ (self):
         return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
 
+class Jump:
+    def __init__ (self, pc):
+        self.pc = pc
+    
+    def __repr__ (self):
+        return f"{type(self).__name__}({self.pc})"
+
+class Exec (Jump):
+    pass
+
+class Ret (Jump):
+    pass
+
 class For:
-    def __init__ (self, iterator, args, statements, token):
+    isFlat = False
+
+    def __init__ (self, iterator, args, statements, linedata):
         self.iterator = iterator
         self.args = args
         self.statements = statements
-        self.token = token
+        self.linedata = linedata
 
     def __repr__ (self):
         return f"{type(self).__name__}({self.iterator}, {self.args}, {self.statements})"
 
 class Const:
-    def __init__ (self, value, type, token):
+    isFlat = True
+
+    def __init__ (self, value, type, linedata):
         self.value = value
         self.type = type
-        self.toke = token
+        self.toke = linedata
     
     def __repr__ (self):
         return f"{type(self).__name__}({self.type}, {self.value})"
 
 class Ref:
-    def __init__ (self, name, token, dot = None):
+    isFlat = True
+
+    def __init__ (self, name, linedata, dot = None):
         self.name = name
-        self.token = token
+        self.linedata = linedata
         self.dot = dot
     
     def __repr__ (self):
         return f"{type(self).__name__}({self.name}, {self.dot})"
 
 class BinOp:
-    def __init__ (self, left, right, token):
+    isFlat = False
+
+    def __init__ (self, left, right, linedata):
         self.left = left
         self.right = right
-        self.token = token
-    
+        self.linedata = linedata
+
+    def reduce (self):
+        print (f"Optimization for {type(self).__name__} not available.")
+        return self
+
     def __repr__ (self):
         return f"{type(self).__name__}({self.left}, {self.right})"
 
@@ -116,19 +175,40 @@ class Mod (BinOp):
     pass
 
 class Add (BinOp):
-    pass
+    def reduce (self):
+        if isinstance (self.left, Const) and isinstance (self.right, Const):
+            result = self.left.value + self.right.value
+            if isinstance (result, float):
+                return Const (result, 'float', None)
+            if result >= 0:
+                return Const (result, 'int', None)
+            else:
+                return Const (result, 'uint', None)
+        return self
 
 class Sub (BinOp):
     pass
 
 class Mul (BinOp):
-    pass
+    def reduce (self):
+        if isinstance (self.left, Const) and isinstance (self.right, Const):
+            result = self.left.value * self.right.value
+            if isinstance (result, float):
+                return Const (result, 'float', None)
+            if result >= 0:
+                return Const (result, 'int', None)
+            else:
+                return Const (result, 'uint', None)
+        return self
 
 class Div (BinOp):
     pass
 
 class Eq (BinOp):
-    pass
+    def reduce (self):
+        if isinstance (self.left, Const) and isinstance (self.right, Const):
+            return Const (self.left.value == self.right.value, 'bool', None)
+        return self
 
 class Neq (BinOp):
     pass
@@ -149,15 +229,20 @@ class Lte (BinOp):
     pass
 
 class Lt (BinOp):
-    pass
+    def reduce (self):
+        if isinstance (self.left, Const) and isinstance (self.right, Const):
+            return Const (self.left.value < self.right.value, 'bool', None)
+        return self
 
 class Gt (BinOp):
     pass
 
 class UnaryOp:
-    def __init__ (self, expr, token):
+    isFlat = False
+
+    def __init__ (self, expr, linedata):
         self.expr = expr
-        self.token = token
+        self.linedata = linedata
     
     def __repr__ (self):
         return f"{type(self).__name__}({self.expr})"

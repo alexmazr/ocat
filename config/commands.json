@@ -1,0 +1,8 @@
+{
+    "cmd" : {
+        "arg1" : "int"
+    },
+    "other_cmd" : {
+        "arg" : "uint"
+    }
+}
