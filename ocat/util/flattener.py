@@ -106,19 +106,22 @@ class Flattener:
                 node.args = [self.checkFlat (self.flatten (expr)) for expr in node.args]
                 self.instructions.append (Declare (False, 'itr', node.iterator, node.args [0], None))
                 self.env.push (node.iterator, 'itr', False)
+                itrRef = Ref (node.iterator, None)
+                itrComp = Lt (itrRef, node.args[1], None)
+                itrCompTemp = self.getTemp ()
+                itrCompAssignPc = len (self.instructions) - 1
+                self.instructions.append (Assign (itrCompTemp, itrComp, None))
+                itrCompIfPc = len (self.instructions)
+                self.instructions.append (If (Ref (itrCompTemp, None), Jump (itrCompIfPc), Jump (None), None))
 
                 stmtPc = len (self.instructions)
                 for stmt in node.statements:
                     self.instructions.append (self.flatten (stmt))
-
-                itrRef = Ref (node.iterator, None)
+                
                 itrStep = Add (itrRef, node.args[2] if len (node.args) >= 3 else Const ('int', 1), None)
-                itrComp = Lt (itrRef, node.args[1], None)
-                itrCompTemp = self.getTemp ()
                 self.instructions.append (Assign (node.iterator, itrStep, None))
-                self.instructions.append (Assign (itrCompTemp, itrComp, None))
-
-                return If (Ref (itrCompTemp, None), Jump (stmtPc), Jump (len (self.instructions) + 1), None)
+                self.instructions [itrCompIfPc].else_.pc = len (self.instructions)
+                return Jump (itrCompAssignPc)
             case Wait ():
                 node.time = self.checkFlat (self.flatten (node.time))
                 return node
