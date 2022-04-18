@@ -1,5 +1,4 @@
 from ply.lex import lex
-from ..ast.nodes import *
 
 # --- Tokenizer
 # The rules for each token are evaluated top to bottom in this file (ply evaluates functions first, in order, than the single line plain tokens)

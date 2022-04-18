@@ -1,4 +1,5 @@
-from ..ast.nodes import *
+from ..instructions.ast import *
+import copy
 
 class Optimizer:
     def __init__ (self):
@@ -22,22 +23,21 @@ class Optimizer:
                 return node
             case Declare ():
                 node.expr = self.optimize (node.expr)
-                if isinstance (node.expr, Const):
-                    # If it's a const then we can add it to the env
+                if isinstance (node.expr, Const) or isinstance (node.expr, Ref):
+                    # If it's immutable, and being declared with a const or ref, remove it.
                     self.opt_env [node.name] = node.expr
                     if not node.mutable:
-                        # If this is also immutable then we can remove the declaration
                         return None
                 return node
             case Assign ():
                 node.expr = self.optimize (node.expr)
-                if isinstance (node.expr, Const):
+                if isinstance (node.expr, Const) or isinstance (node.expr, Ref):
                     # If the assignment is a single const, eliminate it and update the env
-                    self.opt_env [node.target] = node.expr
+                    self.opt_env [node.name] = node.expr
                     return None
                 else:
                     # Otherwise attempt to remove the ref from the env, it's value is now unknown
-                    self.opt_env.pop (node.target, None)
+                    self.opt_env.pop (node.name, None)
                 return node
             case Call ():
                 node.args = self.optimizeList (node.args)
@@ -56,6 +56,8 @@ class Optimizer:
                 return node
             case For ():
                 node.args = self.optimizeList (node.args)
+                # For loops clear our assumptions about data, so clear the env
+                self.opt_env = {}
                 node.statements = self.optimizeList (node.statements)
                 return node
             case Wait ():

@@ -9,6 +9,8 @@ class Program:
         return  f"{type(self).__name__}({self.id}, {self.statements})"
 
 class EndProgram:
+    isFlat = False
+
     def __init__ (self, args, linedata):
         self.args = args
         self.linedata = linedata
@@ -37,13 +39,13 @@ class Declare:
 class Assign:
     isFlat = False
 
-    def __init__ (self, target, expr, linedata):
-        self.target = target
+    def __init__ (self, name, expr, linedata):
+        self.name = name
         self.expr = expr
         self.linedata = linedata
 
     def __repr__ (self):
-        return f"{type(self).__name__}({self.target}, {self.expr})"
+        return f"{type(self).__name__}({self.name}, {self.expr})"
 
 class Call:
     isFlat = False

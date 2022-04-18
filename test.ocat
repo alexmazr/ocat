@@ -1,15 +1,10 @@
-mut int x = 2 if true else 3
-if x == 2 then
-    wait for 4 + 7 * x
-    x = send (cmd, true)
-    wait for 4 + 7 * x
-else
-    send (other_cmd)
-    return
-end if
-x = 2
-return (1, x)
-int blah = x
-for itr in (x,2 + 4,3) loop
-    send (cmd, itr, 5)
-end loop
+int y = 2
+mut int x = y
+int xx = send (cmd, true)
+x = 54
+x = x + xx
+mut int blah = x
+send (cmd, blah+2, 5)
+blah = blah + 2
+x = blah
+send (cmd, x)

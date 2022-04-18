@@ -1,4 +1,4 @@
-from ..ast.nodes import *
+from ..instructions.ast import *
 from .env import Environment
 
 class Flattener:
@@ -35,10 +35,12 @@ class Flattener:
                 return node
             case Declare ():
                 if node.expr is not None:
-                    node.expr = self.checkFlat (self.flatten (node.expr))
+                    node.expr =  self.flatten (node.expr)
                     self.env.push (node.name, node.type, node.mutable)
                 return node
             case Assign ():
+                if node.name not in self.env or not self.env.peek (node.name).mutable:
+                    raise SystemExit (f"Invalid assignment on '{node.name}': {node.linedata.lineno}, {node.linedata.linepos}")
                 node.expr = self.flatten (node.expr)
                 return node
             case Call ():
@@ -76,52 +78,19 @@ class Flattener:
                 return node
             case If ():
                 node.condition = self.checkFlat (self.flatten (node.condition))
-                if isinstance (node.condition, Const):
-                    toFlatten = node.then if node.condition.value else node.else_
-                    for stmt in toFlatten:
-                        self.instructions.append (self.flatten (stmt))
-                    return
-                condPc = len (self.instructions)
-                self.instructions.append (Jump (None))
-
-                thenPc = len (self.instructions)
-                for stmt in node.then:
-                    self.instructions.append (self.flatten (stmt))
-                thenEndPc = len (self.instructions)
-                self.instructions.append (Jump (None))
-                
-                elsePc = len (self.instructions)
-                for stmt in node.else_:
-                    self.instructions.append (self.flatten (stmt))
-                elseEndPc = len (self.instructions)
-                self.instructions.append (Jump (None))
-
-                self.instructions [condPc].pc = len (self.instructions)
-                self.instructions [thenEndPc].pc = len (self.instructions) + 1
-                self.instructions [elseEndPc].pc = len (self.instructions) + 1
-                node.then = Jump (thenPc)
-                node.else_ = Jump (elsePc)
-                return node
+                if isinstance (node.condition, Const) and node.condition:
+                    [self.instructions.append (self.flatten (then)) for then in node.then]
+                elif isinstance (node.condition, Const) and not node.condition:
+                    [self.instructions.append (self.flatten (else_)) for then in node.else_]
+                else:
+                    node.then = [self.flatten (then) for then in node.then]
+                    node.else_ = [self.flatten (else_) for else_ in node.else_]
+                    return node
             case For ():
-                node.args = [self.checkFlat (self.flatten (expr)) for expr in node.args]
-                self.instructions.append (Declare (False, 'itr', node.iterator, node.args [0], None))
                 self.env.push (node.iterator, 'itr', False)
-                itrRef = Ref (node.iterator, None)
-                itrComp = Lt (itrRef, node.args[1], None)
-                itrCompTemp = self.getTemp ()
-                itrCompAssignPc = len (self.instructions) - 1
-                self.instructions.append (Assign (itrCompTemp, itrComp, None))
-                itrCompIfPc = len (self.instructions)
-                self.instructions.append (If (Ref (itrCompTemp, None), Jump (itrCompIfPc), Jump (None), None))
-
-                stmtPc = len (self.instructions)
-                for stmt in node.statements:
-                    self.instructions.append (self.flatten (stmt))
-                
-                itrStep = Add (itrRef, node.args[2] if len (node.args) >= 3 else Const ('int', 1), None)
-                self.instructions.append (Assign (node.iterator, itrStep, None))
-                self.instructions [itrCompIfPc].else_.pc = len (self.instructions)
-                return Jump (itrCompAssignPc)
+                node.args = [self.flatten (expr) for expr in node.args]
+                node.statements = [stmt for stmt in node.statements]
+                return node
             case Wait ():
                 node.time = self.checkFlat (self.flatten (node.time))
                 return node

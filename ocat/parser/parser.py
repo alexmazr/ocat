@@ -1,6 +1,6 @@
 from ply.yacc import yacc
 from .tokenizer import *
-from ..ast.nodes import *
+from ..instructions.ast import *
 
 # OCat Grammar:
 # Program :: statements
@@ -163,7 +163,7 @@ def p_return_args (p):
 
 def p_declare (p):
     'declaration : TYPE assignment'
-    p[0] = Declare (False, p[1], p[2].target, p[2].expr, LineData (p.lineno (1), p.lexpos (1)))
+    p[0] = Declare (False, p[1], p[2].name, p[2].expr, LineData (p.lineno (1), p.lexpos (1)))
 
 def p_declare_mut (p):
     'declaration : MUT TYPE NAME NEWLINE'
@@ -171,7 +171,7 @@ def p_declare_mut (p):
 
 def p_declare_mut_assign (p):
     'declaration : MUT TYPE assignment'
-    p[0] = Declare (True, p[2], p[3].target, p[3].expr, LineData (p.lineno (1), p.lexpos (1)))
+    p[0] = Declare (True, p[2], p[3].name, p[3].expr, LineData (p.lineno (1), p.lexpos (1)))
 
 #################
 # Assignment
