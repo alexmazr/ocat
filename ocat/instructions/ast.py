@@ -77,7 +77,7 @@ class Timeout:
         self.linedata = linedata
 
     def __repr__ (self):
-        return f"{type(self).__name__}"
+        return f"{type(self).__name__}()"
 
 class If:
     isFlat = False
@@ -91,17 +91,17 @@ class If:
     def __repr__ (self):
         return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
 
-class IfExpr:
-    isFlat = False
+# class IfExpr:
+#     isFlat = False
 
-    def __init__ (self, condition, then, else_, linedata):
-        self.condition = condition
-        self.then = then
-        self.else_ = else_
-        self.linedata = linedata
+#     def __init__ (self, condition, then, else_, linedata):
+#         self.condition = condition
+#         self.then = then
+#         self.else_ = else_
+#         self.linedata = linedata
     
-    def __repr__ (self):
-        return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
+#     def __repr__ (self):
+#         return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
 
 class For:
     isFlat = False
@@ -121,7 +121,7 @@ class Const:
     def __init__ (self, value, type, linedata):
         self.value = value
         self.type = type
-        self.toke = linedata
+        self.linedata = linedata
     
     def __repr__ (self):
         return f"{type(self).__name__}({self.type}, {self.value})"
@@ -152,45 +152,17 @@ class BinOp:
             try:
                 result = eval (f"{self.left.value.value} {self.op} {self.right.value.value}")
                 if isinstance (result, float):
-                    return Const (settings.ocat_float (result), 'float', None)
+                    return Const (settings.ocat_float (result), 'float', self.linedata)
                 if result >= 0:
-                    return Const (settings.ocat_uint (result), 'uint', None)
+                    return Const (settings.ocat_uint (result), 'uint', self.linedata)
                 else:
-                    return Const (settings.ocat_int (result), 'int', None)
+                    return Const (settings.ocat_int (result), 'int', self.linedata)
             except:
                 raise SystemExit (f"'{self.left.value.value} {self.op} {self.right.value.value}' is invalid: {self.linedata.lineno}, {self.linedata.linepos}")
         return self
 
     def __repr__ (self):
         return f"{type(self).__name__}({self.left}, {self.right})"
-
-class Cast:
-    isFlat = False
-    
-    def __init__ (self, castType, expr, linedata):
-        self.castType = castType
-        self.expr = expr
-        self.linedata = linedata
-
-    def __repr__ (self):
-        return f"{type(self).__name__}({self.castType}, {self.expr})"
-
-    def reduce (self):
-        global settings
-        try:
-            if isinstance (self.expr, Const):
-                match self.castType:
-                    case 'float':
-                        return Const (settings.ocat_float (float (self.expr.value.value)), 'float', None)
-                    case 'uint':
-                        if self.expr.value.value < 0:
-                            raise OverflowError
-                        return Const (settings.ocat_uint (int (self.expr.value.value)), 'uint', None)
-                    case 'int':
-                        return Const (settings.ocat_int (int (self.expr.value.value)), 'int', None)
-            return self
-        except:
-            raise SystemExit (f"Cast '{self.expr.value.value}' to '{self.castType}' failed: {self.linedata.lineno}, {self.linedata.linepos}")
 
 class LShift (BinOp):
     def __init__ (self, left, right, linedata):
@@ -274,11 +246,11 @@ class Xor (BinOp):
             try:
                 result = bool (self.left.value.value) ^ bool (self.right.value.value)
                 if isinstance (result, float):
-                    return Const (settings.ocat_float (result), 'float', None)
+                    return Const (settings.ocat_float (result), 'float', self.linedata)
                 if result >= 0:
-                    return Const (settings.ocat_uint (result), 'uint', None)
+                    return Const (settings.ocat_uint (result), 'uint', self.linedata)
                 else:
-                    return Const (settings.ocat_int (result), 'int', None)
+                    return Const (settings.ocat_int (result), 'int', self.linedata)
             except:
                 raise SystemExit (f"Operation '{type(self).__name__}' will result in over/under flow: {self.linedata.lineno}, {self.linedata.linepos}")
         return self
@@ -321,14 +293,42 @@ class UnaryOp:
             try:
                 result = eval (f"{self.op} {self.expr.value.value}")
                 if isinstance (result, float):
-                    return Const (settings.ocat_float (result), 'float', None)
+                    return Const (settings.ocat_float (result), 'float', self.linedata)
                 if result >= 0:
-                    return Const (settings.ocat_uint (result), 'uint', None)
+                    return Const (settings.ocat_uint (result), 'uint', self.linedata)
                 else:
-                    return Const (settings.ocat_int (result), 'int', None)
+                    return Const (settings.ocat_int (result), 'int', self.linedata)
             except:
                 raise SystemExit (f"Operation '{type(self).__name__}' will result in over/under flow: {self.linedata.lineno}, {self.linedata.linepos}")
         return self
+
+
+class Cast (UnaryOp):
+    isFlat = False
+    
+    def __init__ (self, castType, expr, linedata):
+        self.castType = castType
+        super ().__init__ (expr, linedata)
+
+    def __repr__ (self):
+        return f"{type(self).__name__}({self.castType}, {self.expr})"
+
+    def reduce (self):
+        global settings
+        try:
+            if isinstance (self.expr, Const):
+                match self.castType:
+                    case 'float':
+                        return Const (settings.ocat_float (float (self.expr.value.value)), 'float', self.linedata)
+                    case 'uint':
+                        if self.expr.value.value < 0:
+                            raise OverflowError
+                        return Const (settings.ocat_uint (int (self.expr.value.value)), 'uint', self.linedata)
+                    case 'int':
+                        return Const (settings.ocat_int (int (self.expr.value.value)), 'int', self.linedata)
+            return self
+        except:
+            raise SystemExit (f"Cast '{self.expr.value.value}' to '{self.castType}' failed: {self.linedata.lineno}, {self.linedata.linepos}")
 
 class USub (UnaryOp):
     def __init__ (self, expr, linedata):

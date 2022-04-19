@@ -43,8 +43,7 @@ from ..settings import Settings
 #
 # timeout :: TIMEOUT WAITTYPE expression
 #
-# expression :: expression IF expression ELSE expression
-#             | expression LSHIFT expression
+# expression :: expression LSHIFT expression
 #             | expression RSHIFT expression
 #             | expression BITAND expression
 #             | expression BITXOR expression
@@ -258,9 +257,9 @@ def p_timeout (p):
 # Expression
 #################
 
-def p_expr_ternary (p):
-    'expression : expression IF expression ELSE expression'
-    p[0] = IfExpr (p[3], p[1], p[5], LineData (p.lineno (2), p.lexpos (2)))
+# def p_expr_ternary (p):
+#     'expression : expression IF expression ELSE expression'
+#     p[0] = IfExpr (p[3], [p[1]], [p[5]], LineData (p.lineno (2), p.lexpos (2)))
 
 def p_expr_lshift (p):
     'expression : expression LSHIFT expression'
@@ -401,6 +400,5 @@ def p_error (p):
         # Ignore any newline characters that are unhandled in our grammar
             ocatParser.errok ()
             return ocatParser.token ()
-        print (ocatParser.symstack)
         raise SystemExit (f"Syntax error: '{p.value}' on line: {p.lineno}, {p.lexpos}")
     raise SystemExit (f"An unknown error occured while parsing")

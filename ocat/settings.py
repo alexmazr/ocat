@@ -39,6 +39,10 @@ class Settings:
         global telemetry
         return name in telemetry
 
+    def getTelemetryType (self, name):
+        global telemetry
+        return telemetry [name]
+
     def ocat_float (self, val):
         global mission
         match mission ['register_size']:

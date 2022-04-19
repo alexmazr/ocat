@@ -41,13 +41,13 @@ class Optimizer:
                 if node.timeout is not None:
                     node.timeout = (node.timeout[0], self.optimize (node.timeout[1]))
                 return node
-            case IfExpr ():
-                node.condition = self.optimize (node.condition)
-                if isinstance (node.condition, Const):
-                    return self.optimize (node.then) if node.condition.value else self.optimize (node.else_)
-                node.then = self.optimize (node.then)
-                node.else_ = self.optimize (node.else_)
-                return node
+            # case IfExpr ():
+            #     node.condition = self.optimize (node.condition)
+            #     if isinstance (node.condition, Const):
+            #         return self.optimize (node.then) if node.condition.value else self.optimize (node.else_)
+            #     node.then = self.optimize (node.then)
+            #     node.else_ = self.optimize (node.else_)
+            #     return node
             case If ():
                 node.condition = self.optimize (node.condition)
                 node.then = self.optimizeList (node.then)

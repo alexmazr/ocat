@@ -1,9 +1,6 @@
-mut float x = float (2147483648)
-mut uint y = x + 2
-y = float (y)
-int spd = fetch (speed, speed > 20 and speed < 50) with timeout rel 3 + x
-if timeout then
-    send (cmd, false)
-else
-    send (cmd, true)
-end if
+mut uint x = 0
+mut int y = 1 + int (x)
+y = int (x)
+send (cmd)
+int spd = fetch (speed, 3.4) with timeout rel 3 + x
+y = timeout

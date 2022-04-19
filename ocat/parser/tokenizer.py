@@ -46,6 +46,7 @@ reserved_words = {
 # Match and ignore a comment before any other rule
 def t_COMMENT (t):
      r'\#.*'
+     print ("matched")
      pass
 
 def t_NAME (t):

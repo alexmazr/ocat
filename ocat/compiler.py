@@ -33,7 +33,7 @@ def compile (filepath, mission_config, command_config, telemetry_config):
             print (instr)
         print ("\n---------------------ocat ir---------------------")
         ocat_ir = translate (checked)
-        for pc, instr in enumerate (ocat_ir):
+        for instr, pc in zip (ocat_ir.ocat_ir, ocat_ir.positions):
             print (pc, end="")
             print (":\t", end="")
             print (instr)

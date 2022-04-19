@@ -23,7 +23,7 @@ class Flattener:
         if node.isFlat == False:
             temp = self.getTemp ()
             self.instructions.append (Assign (temp, node, node.linedata))
-            return Ref (temp, None)
+            return Ref (temp, node.linedata)
         return node
 
     def flattenFetch (self, node):
@@ -31,9 +31,14 @@ class Flattener:
             return node
         elif len (node.args) == 2:
             argPc = len (self.instructions)
-            self.checkFlat (self.flatten (node.args[1]))
-            node.args[1] = self.instructions [argPc:]
+            temp = self.checkFlat (self.flatten (node.args[1]))
+            node.args [1] = self.instructions [argPc:]
             self.instructions = self.instructions [:argPc]
+            if len (node.args [1]) == 0:
+                if isinstance (temp, Const) and temp.value.value:
+                    node.args.pop ()
+                else:
+                    node.args [1] = [Assign (self.getTemp (), temp, node.linedata)]       
         else:
             raise SystemExit (f"Invalid number of args in '{node.name}', '{len(node.args)}' found, must be less than 3: {node.linedata.lineno}, {node.linedata.linepos}")
         
@@ -55,7 +60,7 @@ class Flattener:
             if not self.settings.telemetryDefined (node.args [0].name):
                 raise SystemExit (f"Telemtry '{node.args[0].name}' not defined: {node.linedata.lineno}, {node.linedata.linepos}")
             else:
-                self.env.push (node.args[0].name, 'telemetry', False)
+                self.env.push (node.args[0].name, self.settings.getTelemetryType (node.args[0].name), False)
         
     def flatten (self, node):
         match node:
@@ -90,11 +95,24 @@ class Flattener:
                 else:
                     node.args = [self.checkFlat (self.flatten (expr)) for expr in node.args]
                 return node
-            case IfExpr ():
-                node.condition = self.checkFlat (self.flatten (node.condition))
-                node.then = [self.flatten (then) for then in node.then]
-                node.else_ = [self.flatten (else_) for else_ in node.else_]
-                return node
+            # case IfExpr ():
+            #     node.condition = self.checkFlat (self.flatten (node.condition))
+            #     temp = self.getTemp ()
+            #     thenPc = len (self.instructions)
+            #     for stmt in node.then:
+            #         self.checkFlat (self.flatten (stmt))
+            #     node.then = self.instructions [thenPc:]
+            #     print (node)
+            #     node.then.append (Assign (temp, Ref (node.then[-1].name, node.linedata), node.linedata))
+            #     self.instructions = self.instructions [:thenPc]
+
+            #     elsePc = len (self.instructions)
+            #     for stmt in node.else_:
+            #         self.checkFlat (self.flatten (stmt))
+            #     node.else_ = self.instructions [elsePc:]
+
+            #     self.instructions = self.instructions [:elsePc]
+            #     return node
             case If ():
                 node.condition = self.checkFlat (self.flatten (node.condition))
                 if isinstance (node.condition, Const) and node.condition.value.value:

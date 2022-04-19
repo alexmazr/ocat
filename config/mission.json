@@ -1,5 +1,5 @@
 {
-    "binary_size" : 65535,
+    "binary_size" : 16,
     "memory_size" : 512,
     "register_size" : 32,
     "command_buffer" : 32
