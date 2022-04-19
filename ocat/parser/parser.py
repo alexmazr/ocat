@@ -1,6 +1,7 @@
 from ply.yacc import yacc
 from .tokenizer import *
 from ..instructions.ast import *
+from ..settings import Settings
 
 # OCat Grammar:
 # Program :: statements
@@ -27,6 +28,7 @@ from ..instructions.ast import *
 #             | NAME ASSIGN call
 #
 # call :: FUNCNAME LPAREN arguments RPAREN NEWLINE
+#       | FUNCNAME LPAREN arguments RPAREN WITH timeout NEWLINE
 #
 # for :: FOR NAME IN LPAREN arguments RPAREN LOOP statement+ END LOOP NEWLINE 
 #
@@ -36,13 +38,11 @@ from ..instructions.ast import *
 # arguments :: empty
 #            | expression
 #            | arguments COMMA expression
-#            | arguments COMMA wait
 #
-# wait :: FOR INT
-#       | FOR NAME
-#       | UNTIL INT
-#       | UNTIL NAME
-# 
+# wait :: WAIT WAITTYPE expression
+#
+# timeout :: TIMEOUT WAITTYPE expression
+#
 # expression :: expression IF expression ELSE expression
 #             | expression LSHIFT expression
 #             | expression RSHIFT expression
@@ -64,6 +64,7 @@ from ..instructions.ast import *
 #             | expression LT expression
 #             | expression GT expression
 #             | expression OR expression
+#             | TYPE LPAREN expression RPAREN %prec PAREN
 #             | LPAREN expression RPAREN %prec PAREN
 #             | SUB expression
 #             | INV expression
@@ -71,15 +72,19 @@ from ..instructions.ast import *
 #             | NAME DOT NAME
 #             | INT
 #             | FLOAT
-#             | SCI
-#             | BOOL
+#             | TRUE
+#             | FALSE
 #             | NAME
+#             | TIMEOUT
 
 ocatParser = None
+name = None
+settings = Settings ()
 
-def parse (input):
-    global ocatParser
+def parse (filename, input):
+    global ocatParser, name
     lexer = lex ()
+    name = filename
     ocatParser = yacc ()
     return ocatParser.parse (input)
 
@@ -105,7 +110,8 @@ precedence = (
 
 def p_program (p):
     'program : statements'
-    p[0] = Program ('out.bin', p[1])
+    global name
+    p[0] = Program (name, p[1])
 
 # Util empty production
 def p_empty (p):
@@ -192,6 +198,10 @@ def p_call (p):
     'call : FUNCNAME LPAREN arguments RPAREN NEWLINE'
     p[0] = Call (p[1], p[3], LineData (p.lineno (1), p.lexpos (1)))
 
+def p_call_timeout (p):
+    'call : FUNCNAME LPAREN arguments RPAREN WITH timeout NEWLINE'
+    p[0] = Call (p[1], p[3], LineData (p.lineno (1), p.lexpos (1)), p[6])
+
 #################
 # For
 #################
@@ -233,15 +243,16 @@ def p_arguments_empty (p):
     p[0] = tuple ()
 
 #################
-# Wait
+# Wait & Timeout
 #################
 
 def p_wait (p):
-    '''
-    wait : WAIT FOR expression
-         | WAIT UNTIL expression
-    '''
+    'wait : WAIT WAITTYPE expression'
     p[0] = Wait (p[2], p[3], LineData (p.lineno (1), p.lexpos (1)))
+
+def p_timeout (p):
+    'timeout : TIMEOUT WAITTYPE expression'
+    p[0] = (p[2], p[3])
 
 #################
 # Expression
@@ -335,6 +346,10 @@ def p_expr_group (p):
     'expression : LPAREN expression RPAREN %prec PAREN'
     p[0] = p[2]
 
+def p_expr_cast (p):
+    'expression : TYPE LPAREN expression RPAREN %prec PAREN'
+    p[0] = Cast (p[1], p[3], LineData (p.lineno (1), p.lexpos (1)))
+
 def p_expr_usub (p):
     'expression : SUB expression %prec USUB'
     p[0] = USub (p[2], LineData (p.lineno (1), p.lexpos (1)))
@@ -348,8 +363,8 @@ def p_expr_unot (p):
     p[0] = UNot (p[2], LineData (p.lineno (1), p.lexpos (1)))
 
 def p_expr_dot_name (p):
-    'expression : NAME DOT NAME'
-    p[0] = Ref (p[1], LineData (p.lineno (1), p.lexpos (1)), (p[3], LineData (p.lineno (1), p.lexpos (1))))
+    'expression : TIMEOUT'
+    p[0] = Timeout (p)
 
 def p_expr_name (p):
     'expression : NAME'
@@ -363,13 +378,13 @@ def p_expr_float (p):
     'expression : FLOAT'
     p[0] = Const (p[1], 'float', LineData (p.lineno (1), p.lexpos (1)))
 
-def p_expr_sci (p):
-    'expression : SCI'
-    p[0] = Const (p[1], 'sci', LineData (p.lineno (1), p.lexpos (1)))
+def p_expr_true (p):
+    'expression : TRUE'
+    p[0] = Const (settings.ocat_uint (1), 'uint', LineData (p.lineno (1), p.lexpos (1)))
 
-def p_expr_bool (p):
-    'expression : BOOL'
-    p[0] = Const (True if p[1] == 'true' else False, 'bool', LineData (p.lineno (1), p.lexpos (1)))
+def p_expr_false (p):
+    'expression : FALSE'
+    p[0] = Const (settings.ocat_uint (0), 'uint', LineData (p.lineno (1), p.lexpos (1)))
 
 def p_expr_uint (p):
     'expression : UINT'
@@ -386,5 +401,6 @@ def p_error (p):
         # Ignore any newline characters that are unhandled in our grammar
             ocatParser.errok ()
             return ocatParser.token ()
+        print (ocatParser.symstack)
         raise SystemExit (f"Syntax error: '{p.value}' on line: {p.lineno}, {p.lexpos}")
     raise SystemExit (f"An unknown error occured while parsing")

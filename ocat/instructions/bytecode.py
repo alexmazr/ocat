@@ -19,9 +19,17 @@ class Field:
         self.value = value
         self.size = size
 
+class InstrType (Field):
+    def __init__ (self, value):
+        super ().__init__ (value, 3)
+
+class WaitType (Field):
+    def __init__ (self, value):
+        super ().__init__ (value, 1)
+
 class Opcode (Field):
     def __init__ (self, value):
-        super ().__init__ (value, 8)
+        super ().__init__ (value, 6)
 
 class Register (Field):
     def __init__ (self, value):
@@ -53,15 +61,16 @@ class ByteInstruction:
         return bitstring
 
 class BinaryR (ByteInstruction):
-    # Perform an operation on registers in left and right, store in dest register
     def __init__ (self, left, right, dest):
         self.opcode = None
         self.left = left
         self.right = right
         self.dest = dest
+        self.type = 0
 
     def setFields (self):
         self.fields = [
+            InstrType (self.type),
             Opcode (self.opcode),
             Register (self.left),
             Register (self.right),
@@ -72,14 +81,15 @@ class BinaryR (ByteInstruction):
         return f"{type(self).__name__.lower()} {self.left}, {self.right}, {self.dest}"
 
 class UnaryR (ByteInstruction):
-    # Perform an operation on register in reg, store in dest register
     def __init__ (self, reg, dest):
         self.opcode = None
         self.reg = reg
         self.dest = dest
+        self.type = 1
 
     def setFields (self):
         self.fields = [
+            InstrType (self.type),
             Opcode (self.opcode),
             Register (self.reg),
             Register (self.dest)
@@ -89,15 +99,16 @@ class UnaryR (ByteInstruction):
         return f"{type(self).__name__.lower()} {self.reg}, {self.dest}"
 
 class BinaryC (ByteInstruction):
-    # Perform an operation on register in left and constant right, store in dest register
     def __init__ (self, left, right, dest):
         self.opcode = None
         self.left = left
         self.right = right
         self.dest = dest
+        self.type = 2
 
     def setFields (self):
         self.fields = [
+            InstrType (self.type),
             Opcode (self.opcode),
             Constant (self.left),
             Register (self.right),
@@ -108,14 +119,15 @@ class BinaryC (ByteInstruction):
         return f"{type(self).__name__.lower()} {self.left}, {self.right}, {self.dest}"
 
 class UnaryC (ByteInstruction):
-    # Perform an operation on constant in reg, store in dest register
     def __init__ (self, reg, dest):
         self.opcode = None
         self.reg = reg
         self.dest = dest
+        self.type = 3
 
     def setFields (self):
         self.fields = [
+            InstrType (self.type),
             Opcode (self.opcode),
             Constant (self.reg),
             Register (self.dest)
@@ -125,329 +137,47 @@ class UnaryC (ByteInstruction):
         return f"{type(self).__name__.lower()} {self.reg}, {self.dest}"
 
 class Function (ByteInstruction):
-    # Perform an operation on constant in reg, store in dest register
-    def __init__ (self, id):
+    def __init__ (self):
         self.opcode = None
-        self.id = id
+        self.type = 4
 
     def setFields (self):
         self.fields = [
-            Opcode (self.opcode),
-            MessageId (self.id)
+            InstrType (self.type),
+            Opcode (self.opcode)
         ]
 
     def __repr__ (self):
-        return f"{type(self).__name__.lower()} {self.id}"
+        return f"{type(self).__name__.lower()}"
 
-########################
-# Move instructions
-########################
-
-class Movr (UnaryR):
-    # Move register src to register dest
-    def __init__ (self, src, dest):
-        self.opcode = 0
-        self.src = src
-        self.dest = dest
-    
-    def setFields (self):
-        self.fields = [
-            Opcode (self.opcode),
-            Register (self.src),
-            Register (self.dest)
-        ]
-
-    def __repr__ (self):
-        return f"movr {self.src}, {self.dest}"
-
-class Movc (UnaryC):
-    # Move constant src to register dest
-    def __init__ (self, src, dest):
-        self.opcode = 1
-        self.src = src
-        self.dest = dest
+class SingleC (ByteInstruction):
+    def __init__ (self, const):
+        self.opcode = None
+        self.const = const
+        self.type = 5
 
     def setFields (self):
         self.fields = [
+            InstrType (self.type),
             Opcode (self.opcode),
-            Constant (self.src),
-            Register (self.dest)
+            Constant (self.const)
         ]
 
     def __repr__ (self):
-        return f"movc {self.src}, {self.dest}"
+        return f"{type(self).__name__.lower()} {self.const}"
 
-################################################
-# BinaryR Arithmetic Instructions
-################################################
+class SingleR (ByteInstruction):
+    def __init__ (self, reg):
+        self.opcode = None
+        self.reg = reg
+        self.type = 6
 
-class Addr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 2
-        super ().__init__ (left, right, dest)
+    def setFields (self):
+        self.fields = [
+            InstrType (self.type),
+            Opcode (self.opcode),
+            Register (self.reg)
+        ]
 
-class Subr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 3
-        super ().__init__ (left, right, dest)
-
-class Mulr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 4
-        super ().__init__ (left, right, dest)
-
-class Divr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 5
-        super ().__init__ (left, right, dest)
-
-class Expr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 6
-        super ().__init__ (left, right, dest)
-
-class Modr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 7
-        super ().__init__ (left, right, dest)
-
-class Andlr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 8
-        super ().__init__ (left, right, dest)
-
-class Xorlr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 9
-        super ().__init__ (left, right, dest)
-
-class Eqr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 10
-        super ().__init__ (left, right, dest)
-
-class Neqr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 11
-        super ().__init__ (left, right, dest)
-
-class Expr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 12
-        super ().__init__ (left, right, dest)
-
-class Gter (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 13
-        super ().__init__ (left, right, dest)
-
-class Lter (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 14
-        super ().__init__ (left, right, dest)
-
-class Gtr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 15
-        super ().__init__ (left, right, dest)
-
-class Ltr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 16
-        super ().__init__ (left, right, dest)
-
-class Orlr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 17
-        super ().__init__ (left, right, dest)
-
-class Andbr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 18
-        super ().__init__ (left, right, dest)
-
-class Xorbr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 19
-        super ().__init__ (left, right, dest)
-
-class Orbr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 20
-        super ().__init__ (left, right, dest)
-
-class Shiftlr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 21
-        super ().__init__ (left, right, dest)
-
-class Shiftrr (BinaryR):
-    def __init__ (self, left, right, dest):
-        self.opcode = 22
-        super ().__init__ (left, right, dest) 
-
-################################################
-# UnaryR Arithmetic Instructions
-################################################
-
-class USubr (UnaryR):
-    def __init__ (self, reg, dest):
-        self.opcode = 23
-        super ().__init__ (reg, dest) 
-
-class Invr (UnaryR):
-    def __init__ (self, reg, dest):
-        self.opcode = 24
-        super ().__init__ (reg, dest) 
-
-class Notr (UnaryR):
-    def __init__ (self, reg, dest):
-        self.opcode = 25
-        super ().__init__ (reg, dest) 
-
-################################################
-# BinaryC Arithmetic Instructions
-################################################
-
-class Addc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 26
-        super ().__init__ (left, right, dest)
-
-class Subc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 27
-        super ().__init__ (left, right, dest)
-
-class Mulc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 28
-        super ().__init__ (left, right, dest)
-
-class Divc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 29
-        super ().__init__ (left, right, dest)
-
-class Expc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 30
-        super ().__init__ (left, right, dest)
-
-class Modc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 31
-        super ().__init__ (left, right, dest)
-
-class Andlc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 32
-        super ().__init__ (left, right, dest)
-
-class Xorlc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 33
-        super ().__init__ (left, right, dest)
-
-class Eqc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 34
-        super ().__init__ (left, right, dest)
-
-class Neqc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 35
-        super ().__init__ (left, right, dest)
-
-class Expc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 36
-        super ().__init__ (left, right, dest)
-
-class Gtec (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 37
-        super ().__init__ (left, right, dest)
-
-class Ltec (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 38
-        super ().__init__ (left, right, dest)
-
-class Gtc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 39
-        super ().__init__ (left, right, dest)
-
-class Ltc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 40
-        super ().__init__ (left, right, dest)
-
-class Orlc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 41
-        super ().__init__ (left, right, dest)
-
-class Andbc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 42
-        super ().__init__ (left, right, dest)
-
-class Xorbc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 43
-        super ().__init__ (left, right, dest)
-
-class Orbc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 44
-        super ().__init__ (left, right, dest)
-
-class Shiftlc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 45
-        super ().__init__ (left, right, dest)
-
-class Shiftrc (BinaryC):
-    def __init__ (self, left, right, dest):
-        self.opcode = 46
-        super ().__init__ (left, right, dest) 
-
-################################################
-# UnaryC Arithmetic Instructions
-################################################
-
-class USubc (UnaryC):
-    def __init__ (self, reg, dest):
-        self.opcode = 47
-        super ().__init__ (reg, dest) 
-
-class Invc (UnaryC):
-    def __init__ (self, reg, dest):
-        self.opcode = 48
-        super ().__init__ (reg, dest) 
-
-class Notc (UnaryC):
-    def __init__ (self, reg, dest):
-        self.opcode = 49
-        super ().__init__ (reg, dest) 
-
-############################
-# Send and Fetch Instructions
-############################
-
-class Send (Function):
-    def __init__ (self, id):
-        self.opcode = 50
-        super ().__init__ (id)
-
-class Fetch (Function):
-    def __init__ (self, id):
-        self.opcode = 51
-        super ().__init__ (id)
-
-class FetchN (Function):
-    def __init__ (self, id):
-        self.opcode = 52
-        super ().__init__ (id)
+    def __repr__ (self):
+        return f"{type(self).__name__.lower()} {self.reg}"

@@ -1,9 +1,9 @@
 from ..instructions.ast import *
-import copy
 
 class Optimizer:
     def __init__ (self):
         self.opt_env = {}
+        self.declared = set([])
 
     def optimizeList (self, statements):
         ret = []
@@ -13,6 +13,7 @@ class Optimizer:
                 ret.append (ostmt)
         return ret
 
+    # Also perform declaration checks
     def optimize (self, node):
         match node:
             case Program ():
@@ -22,25 +23,23 @@ class Optimizer:
                 node.args = self.optimizeList (node.args)
                 return node
             case Declare ():
+                if node.name in self.declared:
+                    raise SystemExit (f"Variable '{node.name}' previous declared: {node.linedata.lineno}, {node.linedata.linepos}")
+                else:
+                    self.declared.add (node.name)
                 node.expr = self.optimize (node.expr)
-                if isinstance (node.expr, Const) or isinstance (node.expr, Ref):
+                if not node.mutable and isinstance (node.expr, Const) or isinstance (node.expr, Ref):
                     # If it's immutable, and being declared with a const or ref, remove it.
                     self.opt_env [node.name] = node.expr
-                    if not node.mutable:
-                        return None
+                    return None
                 return node
             case Assign ():
                 node.expr = self.optimize (node.expr)
-                if isinstance (node.expr, Const) or isinstance (node.expr, Ref):
-                    # If the assignment is a single const, eliminate it and update the env
-                    self.opt_env [node.name] = node.expr
-                    return None
-                else:
-                    # Otherwise attempt to remove the ref from the env, it's value is now unknown
-                    self.opt_env.pop (node.name, None)
                 return node
             case Call ():
                 node.args = self.optimizeList (node.args)
+                if node.timeout is not None:
+                    node.timeout = (node.timeout[0], self.optimize (node.timeout[1]))
                 return node
             case IfExpr ():
                 node.condition = self.optimize (node.condition)
@@ -56,8 +55,6 @@ class Optimizer:
                 return node
             case For ():
                 node.args = self.optimizeList (node.args)
-                # For loops clear our assumptions about data, so clear the env
-                self.opt_env = {}
                 node.statements = self.optimizeList (node.statements)
                 return node
             case Wait ():
@@ -66,6 +63,9 @@ class Optimizer:
             case BinOp ():
                 node.left = self.optimize (node.left)
                 node.right = self.optimize (node.right)
+                return node.reduce ()
+            case Cast ():
+                node.expr = self.optimize (node.expr)
                 return node.reduce ()
             case Const ():
                  return node

@@ -1,5 +1,4 @@
 {
-    "current_speed" : {
-        "type" : "int"
-    }
+    "speed" : "int",
+    "something_else" : "uint"
 }

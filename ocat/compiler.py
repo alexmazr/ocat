@@ -1,31 +1,18 @@
 from .parser import parser
-from .util.env import Environment
 from .util.optimize import Optimizer
 from .util.flatten import Flattener
+from .util.typecheck import *
 from .util.translate import *
+from .settings import Settings
+import os
 
+def compile (filepath, mission_config, command_config, telemetry_config):
 
-
-import json
-
-def compile (filepath, command_config, telemetry_config):
-
-    env = Environment ()
-    
-    # Load specified commands and telemetry into environment
-    with open (command_config) as cmd_file:
-        commands = json.load (cmd_file)
-        for name in commands:
-            env.push (name, 'cmd', False)
-    
-    with open (telemetry_config) as tlm_file:
-        telemetry = json.load (tlm_file)
-        for name in telemetry:
-            env.push (name, 'tlm', False)
+    Settings ().init (mission_config, command_config, telemetry_config)
 
     with open (filepath) as f:
         print ("\n---------------------ast---------------------")
-        ast = parser.parse (f.read () + "\n")
+        ast = parser.parse (os.path.basename (filepath), f.read () + "\n")
         print (ast)
         print ("\n---------------------optimize---------------------")
         optimizer = Optimizer ()
@@ -38,8 +25,14 @@ def compile (filepath, command_config, telemetry_config):
             print (pc, end="")
             print (":\t", end="")
             print (instr)
+        print ("\n---------------------type check---------------------")
+        checked = check (flat)
+        for pc, instr in enumerate (checked):
+            print (pc, end="")
+            print (":\t", end="")
+            print (instr)
         print ("\n---------------------ocat ir---------------------")
-        ocat_ir = translate (flat)
+        ocat_ir = translate (checked)
         for pc, instr in enumerate (ocat_ir):
             print (pc, end="")
             print (":\t", end="")

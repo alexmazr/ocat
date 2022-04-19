@@ -1,10 +1,9 @@
-int y = 2
-mut int x = y
-int xx = send (cmd, true)
-x = 54
-x = x + xx
-mut int blah = x
-send (cmd, blah+2, 5)
-blah = blah + 2
-x = blah
-send (cmd, x)
+mut float x = float (2147483648)
+mut uint y = x + 2
+y = float (y)
+int spd = fetch (speed, speed > 20 and speed < 50) with timeout rel 3 + x
+if timeout then
+    send (cmd, false)
+else
+    send (cmd, true)
+end if

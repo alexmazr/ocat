@@ -1,21 +1,23 @@
 from ply.lex import lex
+from ctypes import *
+from ..settings import Settings
 
 # --- Tokenizer
 # The rules for each token are evaluated top to bottom in this file (ply evaluates functions first, in order, than the single line plain tokens)
-tokens = ( 'TYPE', 'BOOL', 'INT', 'UINT', 'FLOAT', 'SCI', 'FUNCNAME', 'LOOP', 'END', 'FOR', 'IF', 'ELSE', 
-            'THEN', 'MUT', 'LPAREN', 'RPAREN', 'COMMA', 'NEWLINE', 'IN', 'WAIT', 'UNTIL',
-            'ASSIGN', 'DOT', 'NAME', 'NOT', 'AND', 'XOR', 'OR', 'LSHIFT', 'RETURN',
-            'RSHIFT', 'BITAND', 'BITXOR', 'BITOR', 'EXP', 'MOD', 'ADD', 
-            'SUB', 'MUL', 'DIV', 'NEQ', 'GTE', 'LTE', 'EQ', 'LT', 'GT', 'INV' )
+tokens = ( 'TYPE', 'INT', 'UINT', 'FLOAT', 'FUNCNAME', 'LOOP', 'END', 'FOR', 'IF', 'ELSE', 
+            'THEN', 'MUT', 'LPAREN', 'RPAREN', 'COMMA', 'NEWLINE', 'IN', 'WAIT', 'TIMEOUT',
+            'ASSIGN', 'DOT', 'NAME', 'NOT', 'AND', 'XOR', 'OR', 'LSHIFT', 'RETURN', 'WITH',
+            'RSHIFT', 'BITAND', 'BITXOR', 'BITOR', 'EXP', 'MOD', 'ADD', 'WAITTYPE',
+            'SUB', 'MUL', 'DIV', 'NEQ', 'GTE', 'LTE', 'EQ', 'LT', 'GT', 'INV', 'TRUE', 'FALSE' )
+
+settings = Settings ()
 
 # Special Reserved words
 reserved_words = {
     'int' : 'TYPE',
     'uint' : 'TYPE',
     'float' : 'TYPE',
-    'sci' : 'TYPE',
     'bool' : 'TYPE',
-    'tlm' : 'TYPE',
     'send' : 'FUNCNAME',
     'fetch_new' : 'FUNCNAME',
     'fetch' : 'FUNCNAME',
@@ -30,11 +32,14 @@ reserved_words = {
     'and' : 'AND',
     'xor' : 'XOR',
     'or' : 'OR',
-    'true' : 'BOOL',
-    'false' : 'BOOL',
+    'true' : 'TRUE',
+    'false' : 'FALSE',
     'in' : 'IN',
     'wait' : 'WAIT',
-    'until' : 'UNTIL',
+    'rel' : 'WAITTYPE',
+    'abs' : 'WAITTYPE',
+    'with' : 'WITH',
+    'timeout' : 'TIMEOUT',
     'return' : 'RETURN'
 }
 
@@ -48,33 +53,32 @@ def t_NAME (t):
     t.type = reserved_words.get (t.value, 'NAME')
     return t
 
-def t_SCI (t):
-    r'\d+e-{0,1}\d+'
-    return t
-
 def t_FLOAT (t):
-    r'\d+\.\d+'
+    r'(-{0,1}\d+(\.\d+|\d*)e(\+|-)\d+|-{0,1}\d+\.\d+)'
+    global settings
     try:
-        t.value = float (t.value)
+        t.value = settings.ocat_float (float (t.value))
         return t
     except:
-        raise SystemExit (f"FLOAT constant too large at: {t.lineno}, {t.lexpos}")
-
-def t_UINT (t):
-    r'-\d+'
-    try:
-        t.value = int (t.value)
-        return t
-    except:
-        raise SystemExit (f"UINT constant too large at: {t.lineno}, {t.lexpos}")
+        raise SystemExit (f"Constant float '{t.value}' out of range: {t.lineno}, {t.lexpos}")
 
 def t_INT (t):
-    r'\d+'
+    r'-\d+'
+    global settings
     try:
-        t.value = int (t.value)
+        t.value = settings.ocat_int (int (t.value))
         return t
     except:
-        raise SystemExit (f"INT constant too large at: {t.lineno}, {t.lexpos}")
+        raise SystemExit (f"Constant int '{t.value}' out of range: {t.lineno}, {t.lexpos}")
+
+def t_UINT (t):
+    r'\d+'
+    global settings
+    try:
+        t.value = settings.ocat_uint (int (t.value))
+        return t
+    except:
+        raise SystemExit (f"Constant uint '{t.value}' out of range: {t.lineno}, {t.lexpos}")
 
 def t_NEWLINE (t):
     r'\n+'

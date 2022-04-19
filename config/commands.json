@@ -1,8 +1,4 @@
 {
-    "cmd" : {
-        "arg1" : "int"
-    },
-    "other_cmd" : {
-        "arg" : "uint"
-    }
+    "cmd" : [8, 3],
+    "other_cmd" : [32]
 }

@@ -21,9 +21,13 @@ class Environment:
         global env
         env [name] = VarData (type, mutable)
 
-    def makeConst (self, name, const):
+    def getType (self, name):
         global env
-        env [name] = const
+        return env [name].type
+    
+    def updateType (self, name, type):
+        global env
+        env [name].type = type
     
     def peek (self, name):
         global env
