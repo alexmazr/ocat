@@ -2,7 +2,6 @@ from ..instructions.binaryc import *
 from ..instructions.binaryr import *
 from ..instructions.unaryc import *
 from ..instructions.unaryr import *
-from ..instructions.ftype import *
 from ..instructions.singlec import *
 from ..instructions.singler import *
 from ..instructions.jumpr import *

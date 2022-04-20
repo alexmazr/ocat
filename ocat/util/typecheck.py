@@ -71,10 +71,10 @@ def check (instructions):
 
                         if len (call.args) > 1:
                             call.args [1] = check (call.args [1])
-
-                            timeoutType = env.getType (call.timeout [1].name) if isinstance (call.timeout [1], Ref) else call.timeout [1].type
-                            if timeoutType != 'uint':
-                                raise SystemExit (f"Invalid timeout type '{timeoutType}': {node.linedata.lineno}, {node.linedata.linepos}")
+                            if call.timeout is not None:
+                                timeoutType = env.getType (call.timeout [1].name) if isinstance (call.timeout [1], Ref) else call.timeout [1].type
+                                if timeoutType != 'uint':
+                                    raise SystemExit (f"Invalid timeout type '{timeoutType}': {node.linedata.lineno}, {node.linedata.linepos}")
                     
                                 
 

@@ -1,7 +1,7 @@
-int curr_speed = fetch (speed)
+int speed = fetch (speed, speed < 20) with timeout rel 5
 
-if timeout then
-    send (speed_up, 20)
+if not timeout then
+    send (speed_up, 299792458)
 else
     send (ok)
 end if

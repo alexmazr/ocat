@@ -12,5 +12,6 @@ if __name__ == "__main__":
         runtime = Runtime (sys.argv [2])
         while True:
             runtime.decode ()
+        runtime.dumpReg ()
     else:
         compile (sys.argv[-1], mission_path, cmd_path, tlm_path)

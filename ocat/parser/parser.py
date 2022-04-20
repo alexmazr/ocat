@@ -35,8 +35,7 @@ from ..settings import Settings
 # if :: IF expression THEN statement+ ELSE statement+ END IF NEWLINE
 #     | IF expression THEN statement+ END IF NEWLINE
 #
-# arguments :: empty
-#            | expression
+# arguments :: expression
 #            | arguments COMMA expression
 #
 # wait :: WAIT WAITTYPE expression
@@ -236,10 +235,6 @@ def p_arguments_append (p):
     '''
     p[1].append (p[3])
     p[0] = p[1]
-
-def p_arguments_empty (p):
-    'arguments : empty'
-    p[0] = tuple ()
 
 #################
 # Wait & Timeout

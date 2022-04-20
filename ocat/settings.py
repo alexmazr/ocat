@@ -29,7 +29,13 @@ class Settings:
 
     def getCommandArgs (self, name):
         global commands
-        return commands [name]
+        if len (commands [name]) == 1:
+            return None
+        return commands [name][1]
+
+    def getCommandId (self, name):
+        global commands
+        return commands [name][0]
 
     def getCommandBufferSize (self):
         global mission
@@ -41,15 +47,19 @@ class Settings:
 
     def getTelemetryType (self, name):
         global telemetry
-        return telemetry [name]
+        return telemetry [name][1]
+
+    def getTelemetryId (self, name):
+        global telemetry
+        return telemetry [name][0]
 
     def getNumRegisters (self):
         global mission
-        return int ((mission ['memory_size'] - (mission ['command_buffer'] * 2) - 1) / mission ['register_size'])        
+        return int ((mission ['memory_size'] - (mission ['command_buffer'] * 2)) / mission ['register_size'])        
 
     def warnPotentialUnusedMemory (self, numr):
         global memory
-        mem_used = ((numr * mission ['register_size']) + (mission ['command_buffer'] * 2) + 1)
+        mem_used = ((numr * mission ['register_size']) + (mission ['command_buffer'] * 2))
         if mission ['memory_size'] > mem_used:
             print (f"WARNING: Allowed mem {mission ['memory_size']} is greater than potential mem used {mem_used}")
 

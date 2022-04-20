@@ -29,3 +29,8 @@ class FetchN (SingleC):
     def __init__ (self, id):
         super ().__init__ (id)
         self.opcode = 5
+
+class Send (SingleC):
+    def __init__ (self, id):
+        super ().__init__ (id)
+        self.opcode = 6

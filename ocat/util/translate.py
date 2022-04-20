@@ -3,7 +3,6 @@ from ..instructions.binaryc import *
 from ..instructions.binaryr import *
 from ..instructions.unaryr import *
 from ..instructions.unaryc import *
-from ..instructions.ftype import *
 from ..instructions.singlec import *
 from ..instructions.singler import *
 from ..instructions.jumpr import *
@@ -53,28 +52,34 @@ class OcatIr:
 def translateSend (node):
     global settings
     func_ir = []
+
     settingArgs = settings.getCommandArgs (node.args[0].name)
     buffSize = settings.getCommandBufferSize ()
     func_ir.append (Shiftcl (buffSize, 'c0', 'c0'))
-    for index, arg in enumerate (node.args[1:]):
-        try:
-            argSize = settingArgs [index]
-            func_ir.append (Shiftcl (buffSize, 'c1', 'c1'))
-        except:
-            raise SystemExit (f"Invalid number of command arguments! '{len (settingArgs)}' specified, '{len (node.args) - 1}' found: {node.linedata.lineno}, {node.linedata.linepos}")
-        if isinstance (arg, Ref):   
-            func_ir.append (Movr (arg.name, 'c1'))
-        else:
-            func_ir.append (Movc (arg.value.value, 'c1'))
-        func_ir.append (Shiftcl (buffSize - argSize, 'c1', 'c1'))
-        func_ir.append (Shiftcrl (buffSize - argSize, 'c1', 'c1'))
-        func_ir.append (Shiftcl (argSize, 'c0', 'c0'))
-        func_ir.append (Orrb ('c0', 'c1', 'c0'))
-        
-    func_ir.append (Send ())
+    if settingArgs is not None:
+        if len (settingArgs) != len (node.args[1:]):
+            raise SystemExit (f"Mismatch in number of command arguments, '{len (settingArgs)}' expected '{len (node.args[1:])}' found: {node.linedata.lineno}, {node.linedata.linepos}")
+        for index, arg in enumerate (node.args[1:]):
+            try:
+                argSize = settingArgs [index]
+                func_ir.append (Shiftcl (buffSize, 'c1', 'c1'))
+            except:
+                raise SystemExit (f"Invalid number of command arguments! '{len (settingArgs)}' specified, '{len (node.args) - 1}' found: {node.linedata.lineno}, {node.linedata.linepos}")
+            if isinstance (arg, Ref):   
+                func_ir.append (Movr (arg.name, 'c1'))
+            else:
+                func_ir.append (Movc (arg.value.value, 'c1'))
+            func_ir.append (Shiftcl (buffSize - argSize, 'c1', 'c1'))
+            func_ir.append (Shiftcrl (buffSize - argSize, 'c1', 'c1'))
+            func_ir.append (Shiftcl (argSize, 'c0', 'c0'))
+            func_ir.append (Orrb ('c0', 'c1', 'c0'))
+    elif len (node.args) > 1:
+        raise SystemExit (f"Mismatch in number of command arguments, '0' expected '{len (node.args[1:])}' found: {node.linedata.lineno}, {node.linedata.linepos}")
+    
+    func_ir.append (Send (settings.getCommandId (node.args[0].name)))
     return func_ir
 
-def translateFetch (node, pc):
+def translateFetch (node, pc, toAssign):
     func_ir = []
     if node.timeout is not None:
         # Add timeout instruction
@@ -85,17 +90,21 @@ def translateFetch (node, pc):
         else:
             func_ir.append (astByteMap[(timeoutNode.__class__, timeoutType, 't')] (timeoutNode.name))
         pc += func_ir[-1].sizeInBytes
-        
+        func_ir.append (Fetch (settings.getTelemetryId (node.args[0].name)) if node.name == 'fetch' else FetchN (settings.getTelemetryId (node.args[0].name)))
+        func_ir.append (Jmpnzr ('t0', None))
+        toutPos = 2
+    else:
+        func_ir.append (Fetch (settings.getTelemetryId (node.args[0].name)) if node.name == 'fetch' else FetchN (settings.getTelemetryId (node.args[0].name)))
 
-    # func_ir.append (Fetch (node.args[0].name) if node.name == 'fetch' else FetchN (node.args[0].name))
-    # TODO: Need to add telemetry name to id resolution
-    func_ir.append (Fetch (0) if node.name == 'fetch' else FetchN (0))
+    func_ir.append (Movr ('r1', toAssign))
     if len (node.args) > 1:
         # If there is a condition
         func_ir.extend (translate (node.args[1]).ocat_ir)
         func_ir.append (Jmpzr (func_ir[-1].dest, pc))
+    if node.timeout is not None:
+        size = sum (instr.sizeInBytes for instr in func_ir)
+        func_ir [toutPos].pc = size
     return func_ir
-
 
 def translate (instructions):
     global astByteMap
@@ -114,13 +123,11 @@ def translate (instructions):
                 elif isinstance (node.expr, Cast):
                     ocat_ir.append (Movr (node.expr.expr.name, node.name))
                 elif isinstance (node.expr, Call):
-                    id = node.expr.args[0].name
                     if node.expr.name == 'send':
                         ocat_ir.extend (translateSend (node.expr))
                         ocat_ir.append (Movr ('r1', node.name))
                     elif node.expr.name == 'fetch' or node.expr.name == 'fetch_new':
-                        ocat_ir.extend (translateFetch (node.expr, ocat_ir.byte_pc))
-                        ocat_ir.append (Movr ('r1', node.name))
+                        ocat_ir.extend (translateFetch (node.expr, ocat_ir.byte_pc, node.name))
                     else:
                         raise SystemExit (f"Unknown function '{node.expr.name}': {node.linedata.lineno}, {node.linedata.linepos}")
                 elif isinstance (node.expr, BinOp):

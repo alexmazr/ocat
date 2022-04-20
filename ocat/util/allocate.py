@@ -4,7 +4,6 @@ from ..instructions.binaryc import *
 from ..instructions.binaryr import *
 from ..instructions.unaryc import *
 from ..instructions.unaryr import *
-from ..instructions.ftype import *
 from ..instructions.singlec import *
 from ..instructions.singler import *
 from ..instructions.jumpr import *
@@ -57,7 +56,7 @@ def allocate (ig, ocat_ir):
                 instr.dest = assignments.get (instr.dest, instr.dest)
             case (SingleR () | JumpR ()):
                 instr.reg = assignments.get (instr.reg, instr.reg)
-            case (FType () | SingleC ()):
+            case SingleC ():
                 pass
 
     return ocat_ir

@@ -20,7 +20,7 @@ class Field:
         self.size = size
 
 class InstrType (Field):
-    size = 4
+    size = 3
     def __init__ (self, value):
         super ().__init__ (value, self.size)
 
@@ -82,7 +82,7 @@ class ByteInstruction:
         return bitstring.encode ()
 
 class BinaryR (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + (Register.size * 3) + Padding (4).size
+    sizeInBits = InstrType.size + Opcode.size + (Register.size * 3) + Padding (5).size
     sizeInBytes = int (sizeInBits / 8)
 
     def __init__ (self, left, right, dest):
@@ -99,14 +99,14 @@ class BinaryR (ByteInstruction):
             Register (self.left),
             Register (self.right),
             Register (self.dest),
-            Padding (4)
+            Padding (5)
         ]
 
     def __repr__ (self):
         return f"{type(self).__name__.lower()} {self.left}, {self.right}, {self.dest}"
 
 class UnaryR (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + (Register.size * 2) + Padding (2).size
+    sizeInBits = InstrType.size + Opcode.size + (Register.size * 2) + Padding (3).size
     sizeInBytes = int (sizeInBits / 8)
 
     def __init__ (self, reg, dest):
@@ -121,14 +121,14 @@ class UnaryR (ByteInstruction):
             Opcode (self.opcode),
             Register (self.reg),
             Register (self.dest),
-            Padding (2)
+            Padding (3)
         ]
 
     def __repr__ (self):
         return f"{type(self).__name__.lower()} {self.reg}, {self.dest}"
 
 class BinaryC (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + Constant.size + (Register.size * 2) + Padding (2).size
+    sizeInBits = InstrType.size + Opcode.size + Constant.size + (Register.size * 2) + Padding (3).size
     sizeInBytes = int (sizeInBits / 8)
     def __init__ (self, left, right, dest):
         self.opcode = None
@@ -144,14 +144,14 @@ class BinaryC (ByteInstruction):
             Constant (self.left),
             Register (self.right),
             Register (self.dest),
-            Padding (2)
+            Padding (3)
         ]
 
     def __repr__ (self):
         return f"{type(self).__name__.lower()} {self.left}, {self.right}, {self.dest}"
 
 class UnaryC (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + Constant.size + Register.size
+    sizeInBits = InstrType.size + Opcode.size + Constant.size + Register.size + Padding (1).size
     sizeInBytes = int (sizeInBits / 8)
 
     def __init__ (self, reg, dest):
@@ -165,56 +165,61 @@ class UnaryC (ByteInstruction):
             InstrType (self.type),
             Opcode (self.opcode),
             Constant (self.reg),
-            Register (self.dest)
+            Register (self.dest),
+            Padding (1)
         ]
 
     def __repr__ (self):
         return f"{type(self).__name__.lower()} {self.reg}, {self.dest}"
 
-class FType (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + Padding (6).size
+class SingleC (ByteInstruction):
+    sizeInBits = InstrType.size + Opcode.size + Constant.size + Padding (7).size
     sizeInBytes = int (sizeInBits / 8)
 
-    def __init__ (self):
+    def __init__ (self, const):
         self.opcode = None
+        self.const = const
         self.type = 4
         
     def setFields (self):
         self.fields = [
             InstrType (self.type),
             Opcode (self.opcode),
-            Padding (6)
-        ]
-
-    def __repr__ (self):
-        return f"{type(self).__name__.lower()}"
-
-class SingleC (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + Constant.size + Padding (6).size
-    sizeInBytes = int (sizeInBits / 8)
-
-    def __init__ (self, const):
-        self.opcode = None
-        self.const = const
-        self.type = 5
-        
-    def setFields (self):
-        self.fields = [
-            InstrType (self.type),
-            Opcode (self.opcode),
             Constant (self.const),
-            Padding (6)
+            Padding (7)
         ]
 
     def __repr__ (self):
         return f"{type(self).__name__.lower()} {self.const}"
 
 class SingleR (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + Register.size
+    sizeInBits = InstrType.size + Opcode.size + Register.size + Padding (1).size
     sizeInBytes = int (sizeInBits / 8)
 
     def __init__ (self, reg):
         self.opcode = None
+        self.reg = reg
+        self.type = 5
+        
+
+    def setFields (self):
+        self.fields = [
+            InstrType (self.type),
+            Opcode (self.opcode),
+            Register (self.reg),
+            Padding (1)
+        ]
+
+    def __repr__ (self):
+        return f"{type(self).__name__.lower()} {self.reg}"
+
+class JumpR (ByteInstruction):
+    sizeInBits = InstrType.size + Opcode.size + Register.size + ProgramCounter.size + Padding (1).size
+    sizeInBytes = int (sizeInBits / 8)
+
+    def __init__ (self, reg, pc):
+        self.opcode = None
+        self.pc = pc
         self.reg = reg
         self.type = 6
         
@@ -223,29 +228,9 @@ class SingleR (ByteInstruction):
         self.fields = [
             InstrType (self.type),
             Opcode (self.opcode),
-            Register (self.reg)
-        ]
-
-    def __repr__ (self):
-        return f"{type(self).__name__.lower()} {self.reg}"
-
-class JumpR (ByteInstruction):
-    sizeInBits = InstrType.size + Opcode.size + Register.size + ProgramCounter.size
-    sizeInBytes = int (sizeInBits / 8)
-
-    def __init__ (self, reg, pc):
-        self.opcode = None
-        self.pc = pc
-        self.reg = reg
-        self.type = 7
-        
-
-    def setFields (self):
-        self.fields = [
-            InstrType (self.type),
-            Opcode (self.opcode),
             Register (self.reg),
-            ProgramCounter (self.pc)
+            ProgramCounter (self.pc),
+            Padding (1)
         ]
 
     def __repr__ (self):

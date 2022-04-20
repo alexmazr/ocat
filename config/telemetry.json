@@ -1,4 +1,4 @@
 {
-    "speed" : "int",
-    "something_else" : "uint"
+    "speed" : [0, "int"],
+    "something_else" : [1, "uint"]
 }

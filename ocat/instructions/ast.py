@@ -91,18 +91,6 @@ class If:
     def __repr__ (self):
         return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
 
-# class IfExpr:
-#     isFlat = False
-
-#     def __init__ (self, condition, then, else_, linedata):
-#         self.condition = condition
-#         self.then = then
-#         self.else_ = else_
-#         self.linedata = linedata
-    
-#     def __repr__ (self):
-#         return f"{type(self).__name__}({self.condition}, {self.then}, {self.else_})"
-
 class For:
     isFlat = False
 

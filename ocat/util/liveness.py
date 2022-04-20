@@ -2,7 +2,6 @@ from ..instructions.binaryc import *
 from ..instructions.binaryr import *
 from ..instructions.unaryc import *
 from ..instructions.unaryr import *
-from ..instructions.ftype import *
 from ..instructions.singlec import *
 from ..instructions.singler import *
 from ..instructions.jumpr import *
@@ -29,8 +28,6 @@ def liveness (ocat_ir):
                 liveness_set.discard (ir.dest)
                 liveness_set.add (ir.left)
                 liveness_set.add (ir.right)
-                liveness_graph.append (liveness_set.copy ())
-            case FType ():
                 liveness_graph.append (liveness_set.copy ())
             case SingleC ():
                 liveness_graph.append (liveness_set.copy ())

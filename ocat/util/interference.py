@@ -4,7 +4,6 @@ from ..instructions.binaryc import *
 from ..instructions.binaryr import *
 from ..instructions.unaryc import *
 from ..instructions.unaryr import *
-from ..instructions.ftype import *
 from ..instructions.singlec import *
 from ..instructions.singler import *
 from ..instructions.jumpr import *
@@ -24,6 +23,6 @@ def interference (ocat_ir, liveness_graph):
                 interference_graph [ir.dest] = lg - set ([ir.reg, ir.dest])
             case (BinaryC () | BinaryR () | UnaryC () | UnaryR ()):
                 interference_graph [ir.dest] = lg - set ([ir.dest])
-            case (FType () | SingleC () | SingleR () | JumpR ()):
+            case (SingleC () | SingleR () | JumpR ()):
                 pass
     return interference_graph
