@@ -1,3 +1,6 @@
+from ctypes import *
+import bitstring
+
 # Byte code instructions for OCat
 # Instructions are formatted into types based on their parameters so r1 has one register, c1 has one constant, cr2 has a constant and a register
 # Instructions are meant to read left to right, i.e. movr r1, r2 -> move register r1 to r2
@@ -70,16 +73,19 @@ class ByteInstruction:
 
     def pack (self):
         global byte_endian, bit_endian
-        bitstring = ''
+        bitstr = ''
         fields = self.fields
         if byte_endian == 'little':
             fields = fields[::-1]
         for field in fields:
-            bitfield = f"{field.value:0{field.size}b}"
+            if isinstance (field.value, float):
+                bitfield = bitstring.BitArray(float=field.value, length=field.size).bin
+            else:
+                bitfield = f"{field.value:0{field.size}b}"
             if bit_endian == 'little':
                 bitfield = bitfield[::-1] # reverse a bit
-            bitstring += bitfield
-        return bitstring.encode ()
+            bitstr += bitfield
+        return bitstr.encode ()
 
 class BinaryR (ByteInstruction):
     sizeInBits = InstrType.size + Opcode.size + (Register.size * 3) + Padding (5).size

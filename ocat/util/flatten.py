@@ -68,7 +68,6 @@ class Flattener:
         match node:
             case Program ():
                 for stmt in node.statements:
-                    # TODO: Figure out why python behaves differently if you append self.flatten (stmt) directly if self.instructions get mutated during call
                     flat = self.flatten (stmt)
                     self.instructions.append (flat)
                 self.instructions = [instr for instr in self.instructions if instr is not None]
@@ -97,24 +96,6 @@ class Flattener:
                 else:
                     node.args = [self.checkFlat (self.flatten (expr)) for expr in node.args]
                 return node
-            # case IfExpr ():
-            #     node.condition = self.checkFlat (self.flatten (node.condition))
-            #     temp = self.getTemp ()
-            #     thenPc = len (self.instructions)
-            #     for stmt in node.then:
-            #         self.checkFlat (self.flatten (stmt))
-            #     node.then = self.instructions [thenPc:]
-            #     print (node)
-            #     node.then.append (Assign (temp, Ref (node.then[-1].name, node.linedata), node.linedata))
-            #     self.instructions = self.instructions [:thenPc]
-
-            #     elsePc = len (self.instructions)
-            #     for stmt in node.else_:
-            #         self.checkFlat (self.flatten (stmt))
-            #     node.else_ = self.instructions [elsePc:]
-
-            #     self.instructions = self.instructions [:elsePc]
-            #     return node
             case If ():
                 node.condition = self.checkFlat (self.flatten (node.condition))
                 if isinstance (node.condition, Const) and node.condition.value.value:

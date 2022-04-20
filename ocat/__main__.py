@@ -14,4 +14,7 @@ if __name__ == "__main__":
             runtime.decode ()
         runtime.dumpReg ()
     else:
-        compile (sys.argv[-1], mission_path, cmd_path, tlm_path)
+        if len (sys.argv) == 2:
+            compile (sys.argv[-1], mission_path, cmd_path, tlm_path)
+        else:
+            compile (sys.argv[-2], mission_path, cmd_path, tlm_path, sys.argv[-1])

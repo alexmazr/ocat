@@ -1,7 +1,8 @@
-int speed = fetch (speed, speed < 20) with timeout rel 5
+mut int speed = fetch (speed, speed < 20) with timeout rel 5
 
 if not timeout then
-    send (speed_up, 299792458)
+    speed = 20.3
+    send (speed_up, speed)
 else
     send (ok)
 end if

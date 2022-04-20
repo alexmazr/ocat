@@ -47,6 +47,8 @@ def checkBinOp (env, settings, node, assignType, assignName):
         raise SystemExit (f"Invalid assignment to type '{assignType}', '{refType}': {node.linedata.lineno}, {node.linedata.linepos}")
     return node
 
+# TODO: Type checking for unary operations
+#  Type checking for other statements that are not declares, currently, nested statements in blocks aren't checked... lol
 def check (instructions):
     env = Environment ()
     settings = Settings ()
@@ -75,7 +77,4 @@ def check (instructions):
                                 timeoutType = env.getType (call.timeout [1].name) if isinstance (call.timeout [1], Ref) else call.timeout [1].type
                                 if timeoutType != 'uint':
                                     raise SystemExit (f"Invalid timeout type '{timeoutType}': {node.linedata.lineno}, {node.linedata.linepos}")
-                    
-                                
-
     return instructions

@@ -53,6 +53,10 @@ class Settings:
         global telemetry
         return telemetry [name][0]
 
+    def getBinSizeAsBytes (self):
+        global mission
+        return 2 ** mission ['binary_size'] - 1
+
     def getNumRegisters (self):
         global mission
         return int ((mission ['memory_size'] - (mission ['command_buffer'] * 2)) / mission ['register_size'])        
@@ -61,7 +65,7 @@ class Settings:
         global memory
         mem_used = ((numr * mission ['register_size']) + (mission ['command_buffer'] * 2))
         if mission ['memory_size'] > mem_used:
-            print (f"WARNING: Allowed mem {mission ['memory_size']} is greater than potential mem used {mem_used}")
+            print (f"WARNING: Allowed mem {mission ['memory_size']} bits is greater than potential mem used {mem_used} bits")
 
     def ocat_float (self, val):
         global mission

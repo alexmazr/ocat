@@ -11,7 +11,7 @@ class VarData:
 env = {}
 
 # This is a "fake" object that essentially wraps the above env global
-#  This is just an attempt to make the api clean is less prone to errors
+#  This is just an attempt to make the api clean and is less prone to errors
 #  It does assume the user ONLY imports the Environment class
 class Environment:
     def __init__ (self):

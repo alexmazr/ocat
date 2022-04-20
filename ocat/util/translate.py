@@ -53,6 +53,9 @@ def translateSend (node):
     global settings
     func_ir = []
 
+    if node.timeout is not None:
+        raise SystemExit (f"Timeout not allowed on 'send': {node.linedata.lineno}, {node.linedata.linepos}")
+
     settingArgs = settings.getCommandArgs (node.args[0].name)
     buffSize = settings.getCommandBufferSize ()
     func_ir.append (Shiftcl (buffSize, 'c0', 'c0'))

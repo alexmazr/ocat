@@ -1,5 +1,4 @@
 from ctypes import *
-from socket import timeout
 from .instructions.bytecode import BinaryR
 from .instructions.bytecode import UnaryR
 from .instructions.bytecode import BinaryC
@@ -144,6 +143,7 @@ def execTimeoutcr (const):
     timeout_flag = 0
     timeout_set = True
     timeout_value = const
+    print (f"Relative timeout set for {const}")
 
 def execFetch (const):
     global timeout_value, timeout_set, timeout_flag
@@ -152,6 +152,7 @@ def execFetch (const):
         writeReg (2, 1, int (input (f"Requesting telemetry {const}: ")))
         timeout_value -= (timer () - start) # Subtract the elapsed time
         if timeout_value <= 0:
+            print ("Timed out!")
             timeout_flag = 1
             timeout_set = False
     else:

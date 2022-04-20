@@ -1,4 +1,3 @@
-from multiprocessing import allow_connection_pickling
 from .parser import parser
 from .util.optimize import Optimizer
 from .util.flatten import Flattener
@@ -11,10 +10,40 @@ from .util.deadremoval import *
 from .settings import Settings
 import os
 
-def compile (filepath, mission_config, command_config, telemetry_config):
+def compile (filepath, mission_config, command_config, telemetry_config, flag = None):
 
-    Settings ().init (mission_config, command_config, telemetry_config)
+    settings = Settings ()
+    settings.init (mission_config, command_config, telemetry_config)
 
+    if flag == '-d':
+        debugCompile (filepath)
+        return
+
+    with open (filepath) as f:
+        ast = parser.parse (os.path.basename (filepath), f.read () + "\n")
+        optimizer = Optimizer ()
+        opt = optimizer.optimize (ast)
+        flattener = Flattener ()
+        flat = flattener.flatten (opt)
+        checked = check (flat)
+        ocat_ir = translate (checked)
+        liveness_graph = liveness (ocat_ir.ocat_ir)
+        ig = interference (ocat_ir.ocat_ir, liveness_graph)
+        ocat_asm = allocate (ig, ocat_ir)
+        ocat_asm = remove_dead (ocat_asm)
+
+        binary = bytearray ()
+        for instr in ocat_asm.ocat_ir:
+            instr.setFields ()
+            binary.extend (instr.pack ())
+        
+        with open('out.bin', 'wb') as writer:
+            writer.write (binary)
+        
+        print (f"Wrote ({int (len (binary) / 8)} / {settings.getBinSizeAsBytes()}) bytes to 'out.bin'")
+
+
+def debugCompile (filepath):
     with open (filepath) as f:
         print ("\n---------------------ast---------------------")
         ast = parser.parse (os.path.basename (filepath), f.read () + "\n")
