@@ -28,6 +28,8 @@ class Flattener:
 
     def flattenFetch (self, node):
         if len (node.args) == 1:
+            if node.timeout is not None:
+                raise SystemExit (f"Timeout specified for unconditional telemetry fetch: {node.linedata.lineno}, {node.linedata.linepos}")
             return node
         elif len (node.args) == 2:
             argPc = len (self.instructions)

@@ -20,7 +20,7 @@ class Invc (UnaryC):
         super ().__init__ (reg, dest) 
         self.opcode = 3
         
-class Notc (UnaryC):
+class UNotc (UnaryC):
     def __init__ (self, reg, dest):
         super ().__init__ (reg, dest)
         self.opcode = 4

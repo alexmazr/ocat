@@ -73,9 +73,3 @@ class Optimizer:
                 return self.opt_env.get (node.name, node)
             case _ :
                 return node
-
-
-
-
-
-

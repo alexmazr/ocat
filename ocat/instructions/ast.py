@@ -346,4 +346,3 @@ class UNot (UnaryOp):
     def __init__ (self, expr, linedata):
         super ().__init__ (expr, linedata)
         self.op = 'not'
-        

@@ -1,8 +1,8 @@
 from .bytecode import UnaryR
 
 class Movr (UnaryR):
-    def __init__ (self, src, dest):
-        super ().__init__ (src, dest) 
+    def __init__ (self, reg, dest):
+        super ().__init__ (reg, dest) 
         self.opcode = 0
 
 class USubri (UnaryR):
@@ -20,7 +20,7 @@ class Invr (UnaryR):
         super ().__init__ (reg, dest)
         self.opcode = 3
          
-class Notr (UnaryR):
+class UNotr (UnaryR):
     def __init__ (self, reg, dest):
         super ().__init__ (reg, dest) 
         self.opcode = 4

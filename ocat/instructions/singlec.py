@@ -29,8 +29,3 @@ class FetchN (SingleC):
     def __init__ (self, id):
         super ().__init__ (id)
         self.opcode = 5
-
-class Jump (SingleC):
-    def __init__ (self, dest):
-        super ().__init__ (dest) 
-        self.opcode = 6

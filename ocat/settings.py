@@ -43,6 +43,16 @@ class Settings:
         global telemetry
         return telemetry [name]
 
+    def getNumRegisters (self):
+        global mission
+        return int ((mission ['memory_size'] - (mission ['command_buffer'] * 2) - 1) / mission ['register_size'])        
+
+    def warnPotentialUnusedMemory (self, numr):
+        global memory
+        mem_used = ((numr * mission ['register_size']) + (mission ['command_buffer'] * 2) + 1)
+        if mission ['memory_size'] > mem_used:
+            print (f"WARNING: Allowed mem {mission ['memory_size']} is greater than potential mem used {mem_used}")
+
     def ocat_float (self, val):
         global mission
         match mission ['register_size']:

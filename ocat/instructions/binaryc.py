@@ -291,7 +291,12 @@ class Shiftcl (BinaryC):
         super ().__init__ (left, right, dest)
         self.opcode = 42
         
-class Shiftcr (BinaryC):
+class Shiftcrl (BinaryC):
     def __init__ (self, left, right, dest):
         super ().__init__ (left, right, dest) 
         self.opcode = 43
+
+class Shiftcra (BinaryC):
+    def __init__ (self, left, right, dest):
+        super ().__init__ (left, right, dest) 
+        self.opcode = 44

@@ -291,7 +291,12 @@ class Shiftrl (BinaryR):
         super ().__init__ (left, right, dest)
         self.opcode = 42
         
-class Shiftrr (BinaryR):
+class Shiftrrl (BinaryR):
     def __init__ (self, left, right, dest):
         super ().__init__ (left, right, dest) 
         self.opcode = 43
+
+class Shiftrra (BinaryR):
+    def __init__ (self, left, right, dest):
+        super ().__init__ (left, right, dest) 
+        self.opcode = 44

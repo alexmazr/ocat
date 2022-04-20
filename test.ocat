@@ -1,6 +1,7 @@
-mut uint x = 0
-mut int y = 1 + int (x)
-y = int (x)
-send (cmd)
-int spd = fetch (speed, 3.4) with timeout rel 3 + x
-y = timeout
+int curr_speed = fetch (speed)
+
+if timeout then
+    send (speed_up, 20)
+else
+    send (ok)
+end if
